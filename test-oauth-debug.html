@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Debug Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        .btn { background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 10px 0; }
+        h1 { color: #333; text-align: center; }
+        .refresh { text-align: center; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facebook OAuth Configuration Monitor</h1>
+        
+        <div class="refresh">
+            <button class="btn" onclick="checkConfig()">Check Current Status</button>
+            <button class="btn" onclick="testOAuth()">Test OAuth Flow</button>
+            <button class="btn" onclick="location.href='/test-oauth'">Simple Test Page</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="details"></div>
+        
+        <div class="log">
+            <strong>Expected Configuration:</strong><br>
+            New App ID: 1420319199160179<br>
+            New App Secret: 3f1517707fb4ff0240ffad674cc41cb1<br>
+            App Name: MyLinked App
+        </div>
+    </div>
+
+    <script>
+        async function checkConfig() {
+            const statusDiv = document.getElementById('status');
+            const detailsDiv = document.getElementById('details');
+            
+            statusDiv.innerHTML = '<div class="info">Checking configuration...</div>';
+            detailsDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/facebook/debug');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const isNewApp = data.clientId === '1420319199160179';
+                    
+                    statusDiv.innerHTML = `
+                        <div class="${isNewApp ? 'success' : 'warning'}">
+                            ${isNewApp ? '✓ Using NEW Facebook App' : '⚠ Still using OLD Facebook App'}
+                        </div>
+                    `;
+                    
+                    detailsDiv.innerHTML = `
+                        <div class="log">
+                            <strong>Current Configuration:</strong><br>
+                            App ID: ${data.clientId}<br>
+                            App Token: ${data.appToken}<br>
+                            App Name: ${data.appDetails?.name || 'Unknown'}<br>
+                            Redirect URI: ${data.redirectUri}<br>
+                            Base URL: ${data.baseUrl}<br>
+                            Timestamp: ${data.timestamp}
+                        </div>
+                    `;
+                    
+                    if (isNewApp) {
+                        detailsDiv.innerHTML += '<div class="success">Environment variables successfully updated! Ready for testing.</div>';
+                    } else {
+                        detailsDiv.innerHTML += '<div class="warning">Please update FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET in your Secrets tab.</div>';
+                    }
+                    
+                } else if (response.status === 500) {
+                    const errorData = await response.json();
+                    statusDiv.innerHTML = '<div class="error">Configuration check failed</div>';
+                    detailsDiv.innerHTML = `<div class="log">Error: ${errorData.error}<br>Details: ${errorData.details}</div>`;
+                } else {
+                    statusDiv.innerHTML = '<div class="error">Unexpected response from debug endpoint</div>';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">Failed to check configuration</div>';
+                detailsDiv.innerHTML = `<div class="log">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testOAuth() {
+            const statusDiv = document.getElementById('status');
+            
+            statusDiv.innerHTML = '<div class="info">Testing OAuth redirect...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/facebook', {
+                    method: 'GET',
+                    redirect: 'manual'
+                });
+                
+                if (response.status === 302) {
+                    const location = response.headers.get('location');
+                    if (location) {
+                        const url = new URL(location);
+                        const clientId = url.searchParams.get('client_id');
+                        const isNewApp = clientId === '1420319199160179';
+                        
+                        statusDiv.innerHTML = `
+                            <div class="${isNewApp ? 'success' : 'warning'}">
+                                OAuth redirect ${isNewApp ? 'using NEW app' : 'using OLD app'}
+                            </div>
+                        `;
+                        
+                        document.getElementById('details').innerHTML = `
+                            <div class="log">
+                                OAuth URL Client ID: ${clientId}<br>
+                                Full redirect URL: ${location.substring(0, 200)}...
+                            </div>
+                        `;
+                    }
+                } else {
+                    statusDiv.innerHTML = `<div class="error">OAuth test failed with status: ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">OAuth test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-check on page load
+        checkConfig();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(checkConfig, 30000);
+    </script>
+</body>
+</html>

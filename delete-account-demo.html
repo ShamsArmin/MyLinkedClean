@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Delete Account</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .danger-zone {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .danger-zone h2 {
+      color: #dc2626;
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+    .danger-zone p {
+      color: #666;
+      margin: 0 0 16px 0;
+      line-height: 1.5;
+    }
+    .delete-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+    .delete-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .status {
+      margin: 20px 0;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    .hidden {
+      display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .auth-section {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .auth-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+    .auth-btn:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Delete Account</h1>
+
+  <div class="auth-section">
+    <h3>Authentication Status</h3>
+    <p id="auth-status">Not authenticated</p>
+    <button class="auth-btn" onclick="simulateLogin()">Simulate Login</button>
+    <button class="auth-btn" onclick="simulateLogout()">Simulate Logout</button>
+  </div>
+
+  <div class="danger-zone">
+    <h2>Danger Zone</h2>
+    <p>Permanently delete your account and all data</p>
+    <p>Once you delete your account, there is no going back. All of your data will be permanently removed.</p>
+    <button id="deleteBtn" class="delete-btn" onclick="handleDeleteAccount()">Delete Account</button>
+  </div>
+
+  <div id="status" class="status hidden"></div>
+
+  <script>
+    let isAuthenticated = false;
+    let isDeleting = false;
+    const userId = "REPLACE_WITH_REAL_USER_ID"; // Replace with actual user ID from session or localStorage
+
+    function updateAuthStatus() {
+      const statusEl = document.getElementById('auth-status');
+      statusEl.textContent = isAuthenticated ? `Authenticated as ${userId}` : 'Not authenticated';
+      statusEl.style.color = isAuthenticated ? '#059669' : '#dc2626';
+    }
+
+    function simulateLogin() {
+      isAuthenticated = true;
+      updateAuthStatus();
+      showStatus('Logged in successfully', 'success');
+    }
+
+    function simulateLogout() {
+      isAuthenticated = false;
+      updateAuthStatus();
+      showStatus('Logged out successfully', 'info');
+    }
+
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      statusEl.classList.remove('hidden');
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => statusEl.classList.add('hidden'), 3000);
+      }
+    }
+
+    function updateDeleteButton() {
+      const btn = document.getElementById('deleteBtn');
+      btn.innerHTML = isDeleting ? '<span class="spinner"></span>Deleting Account...' : 'Delete Account';
+      btn.disabled = isDeleting;
+    }
+
+    async function handleDeleteAccount() {
+      if (!isAuthenticated) {
+        showStatus('Authentication required. Please log in to delete your account.', 'error');
+        return;
+      }
+
+      const confirmed = confirm("⚠️ Are you sure you want to delete your account and all data permanently?");
+      if (!confirmed) return;
+
+      const final = confirm("Final confirmation: This cannot be undone. Proceed?");
+      if (!final) return;
+
+      isDeleting = true;
+      updateDeleteButton();
+
+      try {
+        const res = await fetch("/api/delete-account", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Unknown error");
+
+        showStatus("Account deleted successfully. Logging out...", "success");
+
+        setTimeout(() => {
+          simulateLogout();
+          showStatus("Redirected to homepage", "info");
+        }, 2000);
+      } catch (err) {
+        showStatus(`Error: ${err.message}`, "error");
+      } finally {
+        isDeleting = false;
+        updateDeleteButton();
+      }
+    }
+
+    updateAuthStatus();
+    updateDeleteButton();
+  </script>
+</body>
+</html>

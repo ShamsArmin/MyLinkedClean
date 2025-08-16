@@ -1,0 +1,50 @@
+Purpose:
+This feature allows users to highlight projects they’ve created with others—whether it’s a video, portfolio, catalog, event, campaign, or any other creative or professional collaboration. It brings recognition, transparency, and a strong community feel to each profile.
+
+⸻
+
+How It Works:
+	1.	Add a Project Link
+The user can add a project by entering a title and pasting a URL (YouTube, Behance, Google Drive, external website, etc.)
+	2.	Tag Team Members or Contributors
+The user can mention other users of the app who were involved in the project—such as:
+	•	Co-creators
+	•	Team members
+	•	Sponsors
+	•	Companies/agencies involved
+(Mentions appear as clickable profiles under the project link.)
+	3.	Add Logo or Image Thumbnail
+Each project can have a small visual beside it—either:
+	•	A logo of the brand or team
+	•	A cover image from the project (auto-fetched or uploaded manually)
+	4.	Short Description or Tagline
+A short text field for explaining the project in 1–2 sentences. Example:
+“A 3D-printed furniture catalog created in collaboration with Studio Forma and EcoPrint.”
+	5.	Optional Icons / Labels:
+Let users add up to 3 visual tags per project link, such as:
+	•	“Award-Winning”
+	•	“In Progress”
+	•	“Sustainability”
+	•	“UX/UI”
+	•	“Architecture”
+	•	“Team of 5”
+These tags help visitors quickly understand the context of the project.
+	6.	Social Proof:
+Show a mini-counter of profile visits or clicks on that project (e.g. “Viewed 124 times”) to encourage more interaction.
+	7.	Pin to Top of Profile (Optional)
+Allow users to feature 1–2 projects at the top of their profile for extra visibility.
+
+⸻
+
+Simple UX/UI Add-ons:
+	•	Smooth carousel display for multiple project links
+	•	Animated hover/click effects for logo and team tags
+	•	Lightbox popup to preview a YouTube/Vimeo video without leaving the app
+	•	Mini badge showing the user’s role: Designer, Developer, Editor, etc.
+
+⸻
+
+Why It’s Great:
+	•	Gives users a way to show real collaborations, not just static links.
+	•	Encourages networking, as users explore each other’s team projects.
+	•	Adds a layer of professional credibility and social proof to each profile

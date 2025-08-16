@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Facebook OAuth Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            background: #1877f2; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            cursor: pointer;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        .info { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; color: #cc0000; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #e6ffe6; color: #006600; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Facebook Mobile OAuth Diagnostic Test</h1>
+    
+    <div class="info">
+        <strong>Mobile App ID:</strong> 1479892119839281<br>
+        <strong>Desktop App ID:</strong> 1420319199160179<br>
+        <strong>Test Purpose:</strong> Identify exact OAuth failure cause
+    </div>
+
+    <button class="test-button" onclick="testMobileOAuth()">
+        Test Mobile Facebook OAuth
+    </button>
+    
+    <button class="test-button" onclick="testDesktopOAuth()">
+        Test Desktop Facebook OAuth
+    </button>
+
+    <div id="results"></div>
+
+    <script>
+        const MOBILE_APP_ID = '1479892119839281';
+        const DESKTOP_APP_ID = '1420319199160179';
+        const REDIRECT_URI = window.location.origin + '/test-callback.html';
+
+        function testMobileOAuth() {
+            logResult('Testing Mobile Facebook OAuth...', 'info');
+            
+            const params = new URLSearchParams({
+                client_id: MOBILE_APP_ID,
+                redirect_uri: REDIRECT_URI,
+                scope: 'public_profile',
+                response_type: 'code',
+                state: 'mobile_test_' + Date.now(),
+                display: 'touch'
+            });
+
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+            
+            logResult(`Generated OAuth URL: ${authUrl}`, 'info');
+            logResult('Redirecting to Facebook...', 'info');
+            
+            // Open in new window to see the actual error
+            window.open(authUrl, '_blank');
+        }
+
+        function testDesktopOAuth() {
+            logResult('Testing Desktop Facebook OAuth...', 'info');
+            
+            const params = new URLSearchParams({
+                client_id: DESKTOP_APP_ID,
+                redirect_uri: REDIRECT_URI,
+                scope: 'public_profile',
+                response_type: 'code',
+                state: 'desktop_test_' + Date.now()
+            });
+
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+            
+            logResult(`Generated OAuth URL: ${authUrl}`, 'info');
+            logResult('Redirecting to Facebook...', 'info');
+            
+            // Open in new window to see the actual error
+            window.open(authUrl, '_blank');
+        }
+
+        function logResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            resultsDiv.appendChild(div);
+        }
+
+        // Check if we're on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        logResult(`Device detected as: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
+        
+        // Display current URL for debugging
+        logResult(`Current URL: ${window.location.href}`, 'info');
+        logResult(`Redirect URI for OAuth: ${REDIRECT_URI}`, 'info');
+    </script>
+</body>
+</html>

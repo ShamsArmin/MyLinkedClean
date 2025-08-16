@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Live Mode Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-box { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 10px; background: #1877f2; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #166fe5; }
+        .facebook-btn { background: #1877f2; }
+        .google-btn { background: #db4437; }
+    </style>
+</head>
+<body>
+    <h1>Facebook Live Mode Authentication Test</h1>
+    
+    <div class="test-box info">
+        <h3>Current Configuration</h3>
+        <p><strong>Facebook App ID:</strong> 2696553390542098</p>
+        <p><strong>App Name:</strong> MyLinked</p>
+        <p><strong>App Mode:</strong> Live Mode</p>
+        <p><strong>Business Verification:</strong> Required for unrestricted access</p>
+        <p><strong>Domain:</strong> www.mylinked.app</p>
+    </div>
+
+    <div class="test-box warning">
+        <h3>Expected Behavior</h3>
+        <p><strong>With Business Verification:</strong> ✅ Facebook login works for all users</p>
+        <p><strong>Without Business Verification:</strong> ❌ "Feature Unavailable" error</p>
+        <p><strong>Development Mode:</strong> ✅ Works for app developers only</p>
+    </div>
+
+    <div class="test-box">
+        <h3>Test Authentication Methods</h3>
+        <button onclick="testFacebookLogin()" class="facebook-btn">Test Facebook Login (Live Mode)</button>
+        <button onclick="testGoogleLogin()" class="google-btn">Test Google Login (Working)</button>
+        <button onclick="goToMyLinkedAuth()">Go to MyLinked Auth Page</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function addResult(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-box ${type}`;
+            div.innerHTML = content;
+            document.getElementById('results').appendChild(div);
+        }
+
+        function testFacebookLogin() {
+            addResult(`<h4>Testing Facebook Login (Live Mode)</h4><p>Redirecting to Facebook OAuth...</p><p><small>Expected: "Feature Unavailable" without business verification</small></p>`, 'info');
+            
+            setTimeout(() => {
+                window.location.href = '/api/auth/facebook';
+            }, 2000);
+        }
+
+        function testGoogleLogin() {
+            addResult(`<h4>Testing Google Login</h4><p>Redirecting to Google OAuth...</p><p><small>Expected: Successful authentication</small></p>`, 'info');
+            
+            setTimeout(() => {
+                window.location.href = '/api/auth/google';
+            }, 2000);
+        }
+
+        function goToMyLinkedAuth() {
+            addResult(`<h4>Opening MyLinked Auth Page</h4><p>Going to main authentication page...</p>`, 'info');
+            
+            setTimeout(() => {
+                window.location.href = '/auth';
+            }, 1000);
+        }
+
+        // Auto-run status check on page load
+        window.onload = function() {
+            addResult(`
+                <h4>Facebook Live Mode Status</h4>
+                <p><strong>Issue:</strong> "Feature Unavailable" error appears because:</p>
+                <ul>
+                    <li>✅ App is correctly configured in Live Mode</li>
+                    <li>✅ All required fields are completed</li>
+                    <li>❌ Business Verification is incomplete</li>
+                </ul>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li><strong>Production:</strong> Complete business verification in Facebook Developer Console</li>
+                    <li><strong>Testing:</strong> Switch app to Development Mode temporarily</li>
+                    <li><strong>Alternative:</strong> Use Google login (works perfectly)</li>
+                </ul>
+                <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+            `, 'warning');
+        };
+    </script>
+</body>
+</html>

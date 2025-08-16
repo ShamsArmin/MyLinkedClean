@@ -1,0 +1,62 @@
+Hi Replit! I'd like you to help me **rebuild the Collaboration Request feature** from scratch in my app. Previously, it had bugs and 404 issues, so I removed everything related to it from both the frontend and backend.
+
+Please implement this feature **cleanly and step-by-step** using my existing stack:
+
+---
+
+### ✅ Goal:
+Allow a user to send a **Collaboration Request** to another user (from their public profile page), and let the recipient **view, accept, or reject** the request in their **dashboard** under a “Collaboration Requests” section.
+
+---
+
+### 🧩 Step-by-Step Implementation Plan:
+
+#### ✅ Step 1: **Database**
+- Create a new table `collaborationRequests` (or similar) with:
+  - `id`: auto-increment
+  - `senderId`: integer (user who sent the request)
+  - `receiverId`: integer (user who receives the request)
+  - `message`: text
+  - `status`: enum ("pending", "accepted", "rejected"), default "pending"
+  - `createdAt`, `updatedAt`
+
+Add this to `db-storage-enhanced.ts`.
+
+---
+
+#### ✅ Step 2: **API Routes**
+Add the following backend routes in `routes.ts`:
+
+1. `POST /api/collaboration-requests`
+   - Creates a new collaboration request
+   - Requires senderId, receiverId, message
+
+2. `GET /api/collaboration-requests/received`
+   - Returns all requests where the current logged-in user is the receiver
+
+3. `PATCH /api/collaboration-requests/:id`
+   - Allows the receiver to update the request status to "accepted" or "rejected"
+
+---
+
+#### ✅ Step 3: **Frontend**
+1. **Public Profile Page:**
+   - Add a “Send Collaboration Request” button.
+   - Show a modal form with a message field.
+   - Submit request to the backend.
+
+2. **Dashboard > Collaboration Page:**
+   - Show 3 sections: “Pending,” “Accepted,” “Rejected.”
+   - Each request card should show sender info, message, and accept/reject buttons if status is "pending."
+   - Accept/Reject buttons should call the `PATCH` route.
+
+---
+
+### ❗ Notes:
+- Please make sure route paths match exactly between frontend and backend.
+- Avoid hardcoding test users; use session-based or real user ID.
+- Don’t insert sample/test requests unless I ask.
+- Keep code modular and clean.
+- Use TailwindCSS for styling as I already use it.
+
+Let me know when you complete each step so I can test before continuing to the next. Thank you!

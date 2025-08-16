@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URGENT: Support UI Debug Test</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+        .test-section { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #007bff; }
+        .pass { border-left-color: #28a745; }
+        .fail { border-left-color: #dc3545; }
+        button { background: #007bff; color: white; border: none; padding: 8px 16px; margin: 5px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🚨 URGENT: Support Management Debug Test</h1>
+    <p><strong>Testing if the support management system actually works...</strong></p>
+    
+    <div class="test-section" id="test1">
+        <h3>Test 1: Load Messages</h3>
+        <button onclick="test1()">Load Support Messages</button>
+        <div id="result1"></div>
+    </div>
+    
+    <div class="test-section" id="test2">
+        <h3>Test 2: Update Status</h3>
+        <button onclick="test2()">Update Message Status</button>
+        <div id="result2"></div>
+    </div>
+    
+    <div class="test-section" id="test3">
+        <h3>Test 3: Toggle Read Status</h3>
+        <button onclick="test3()">Toggle Read Status</button>
+        <div id="result3"></div>
+    </div>
+    
+    <div class="test-section" id="test4">
+        <h3>Test 4: Add Admin Notes</h3>
+        <button onclick="test4()">Add Admin Notes</button>
+        <div id="result4"></div>
+    </div>
+    
+    <div class="test-section" id="test5">
+        <h3>Test 5: Delete Message</h3>
+        <button onclick="test5()">Delete Message</button>
+        <div id="result5"></div>
+    </div>
+
+    <script>
+        function showResult(testNum, message, success = true) {
+            const resultDiv = document.getElementById(`result${testNum}`);
+            const testDiv = document.getElementById(`test${testNum}`);
+            
+            resultDiv.innerHTML = `<div class="${success ? 'success' : 'error'}">${message}</div>`;
+            testDiv.className = `test-section ${success ? 'pass' : 'fail'}`;
+        }
+        
+        async function test1() {
+            try {
+                const response = await fetch('/api/support/messages');
+                const data = await response.json();
+                showResult(1, `✅ SUCCESS: Loaded ${data.length} messages. API working perfectly!`, true);
+                console.log('Messages:', data);
+            } catch (error) {
+                showResult(1, `❌ FAILED: ${error.message}`, false);
+            }
+        }
+        
+        async function test2() {
+            try {
+                const response = await fetch('/api/support/messages/9', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'open' })
+                });
+                const data = await response.json();
+                showResult(2, `✅ SUCCESS: Status updated to 'open' for message ${data.id}`, true);
+            } catch (error) {
+                showResult(2, `❌ FAILED: ${error.message}`, false);
+            }
+        }
+        
+        async function test3() {
+            try {
+                const response = await fetch('/api/support/messages/8', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isRead: false })
+                });
+                const data = await response.json();
+                showResult(3, `✅ SUCCESS: Read status toggled for message ${data.id}`, true);
+            } catch (error) {
+                showResult(3, `❌ FAILED: ${error.message}`, false);
+            }
+        }
+        
+        async function test4() {
+            try {
+                const response = await fetch('/api/support/messages/7', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminNotes: 'Debug test notes added successfully!' })
+                });
+                const data = await response.json();
+                showResult(4, `✅ SUCCESS: Admin notes added to message ${data.id}`, true);
+            } catch (error) {
+                showResult(4, `❌ FAILED: ${error.message}`, false);
+            }
+        }
+        
+        async function test5() {
+            try {
+                const response = await fetch('/api/support/messages/2', {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showResult(5, `✅ SUCCESS: Message 2 deleted successfully`, true);
+                } else {
+                    showResult(5, `❌ FAILED: Delete request failed with status ${response.status}`, false);
+                }
+            } catch (error) {
+                showResult(5, `❌ FAILED: ${error.message}`, false);
+            }
+        }
+        
+        // Auto-run all tests when page loads
+        window.onload = () => {
+            setTimeout(() => {
+                console.log('Starting automatic tests...');
+                test1();
+                setTimeout(() => test2(), 1000);
+                setTimeout(() => test3(), 2000);
+                setTimeout(() => test4(), 3000);
+                setTimeout(() => test5(), 4000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

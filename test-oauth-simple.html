@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook OAuth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { background: #1877f2; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 10px 0; display: block; width: 100%; text-decoration: none; text-align: center; }
+        .btn:hover { background: #166fe5; }
+        .status { padding: 15px; margin: 15px 0; border-radius: 6px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        h1 { text-align: center; color: #333; }
+        h2 { color: #1877f2; margin-top: 30px; }
+        .debug { background: #f8f9fa; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facebook OAuth Flow Test</h1>
+        
+        <h2>Step 1: Test Configuration</h2>
+        <button class="btn" onclick="testConfig()">Check App Configuration</button>
+        <div id="config-result"></div>
+        
+        <h2>Step 2: Test OAuth Redirect</h2>
+        <button class="btn" onclick="testRedirect()">Test OAuth Endpoint</button>
+        <div id="redirect-result"></div>
+        
+        <h2>Step 3: Start OAuth Flow</h2>
+        <a href="/api/auth/facebook" class="btn">Login with Facebook</a>
+        <div id="oauth-result"></div>
+        
+        <div class="debug">
+            <strong>Debug Info:</strong><br>
+            App ID: 1420319199160179<br>
+            Base URL: <span id="base-url"></span><br>
+            OAuth URL: <span id="oauth-url"></span><br>
+            Callback URL: <span id="callback-url"></span>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        document.getElementById('base-url').textContent = baseUrl;
+        document.getElementById('oauth-url').textContent = baseUrl + '/api/auth/facebook';
+        document.getElementById('callback-url').textContent = baseUrl + '/api/auth/facebook/callback';
+        
+        async function testConfig() {
+            const result = document.getElementById('config-result');
+            result.innerHTML = '<div class="info">Testing app configuration...</div>';
+            
+            try {
+                const response = await fetch('/api/facebook/debug');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">✓ Configuration Valid</div>
+                        <div class="debug">
+                            App ID: ${data.clientId}<br>
+                            App Token: ${data.appToken}<br>
+                            App Name: ${data.appDetails?.name || 'Unknown'}<br>
+                            Redirect URI: ${data.redirectUri}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">✗ Configuration Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">✗ Test Failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testRedirect() {
+            const result = document.getElementById('redirect-result');
+            result.innerHTML = '<div class="info">Testing OAuth redirect...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/facebook', { 
+                    method: 'GET', 
+                    redirect: 'manual' 
+                });
+                
+                if (response.status === 302) {
+                    const location = response.headers.get('location');
+                    if (location && location.includes('facebook.com')) {
+                        result.innerHTML = `
+                            <div class="success">✓ OAuth Redirect Working</div>
+                            <div class="debug">Redirects to Facebook authorization</div>
+                        `;
+                    } else {
+                        result.innerHTML = `<div class="error">✗ Redirects to wrong URL: ${location}</div>`;
+                    }
+                } else {
+                    result.innerHTML = `<div class="error">✗ Wrong status code: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">✗ Redirect test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Check for OAuth callback results
+        const urlParams = new URLSearchParams(window.location.search);
+        const oauthResult = document.getElementById('oauth-result');
+        
+        if (urlParams.has('code')) {
+            oauthResult.innerHTML = `
+                <div class="success">✓ OAuth Success</div>
+                <div class="debug">Received authorization code from Facebook</div>
+            `;
+        } else if (urlParams.has('error')) {
+            oauthResult.innerHTML = `
+                <div class="error">✗ OAuth Error: ${urlParams.get('error')}</div>
+                <div class="debug">${urlParams.get('error_description') || 'No description'}</div>
+            `;
+        }
+    </script>
+</body>
+</html>

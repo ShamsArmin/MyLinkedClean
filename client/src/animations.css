@@ -1,0 +1,185 @@
+/* Animations.css - Custom animations for MyLinked app */
+
+/* Password input specific styling */
+.password-input-wrapper {
+  position: relative;
+  z-index: 5;
+}
+
+.password-input-wrapper input[type="password"] {
+  background-color: white !important;
+  color: #333 !important;
+  z-index: 5;
+  position: relative;
+}
+
+.password-input-wrapper input[type="password"]:-webkit-autofill,
+.password-input-wrapper input[type="password"]:-webkit-autofill:hover,
+.password-input-wrapper input[type="password"]:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #333 !important;
+}
+
+/* Success animation - gentle bounce */
+.success-animation,
+h1.success-animation,
+h2.success-animation,
+h3.success-animation {
+  animation: success-bounce 0.5s ease-in-out;
+}
+
+@keyframes success-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Slide in animation */
+.slide-in-animation,
+p.slide-in-animation {
+  animation: slide-in 0.5s ease-out;
+  transform-origin: left center;
+}
+
+@keyframes slide-in {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Float animation for cards */
+.float-animation,
+[animation="float"] {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Pulse animation for buttons */
+.pulse-animation,
+[animation="pulse"] {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Wiggle animation for elements */
+.wiggle-animation,
+[animation="wiggle"] {
+  animation: wiggle 2.5s infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+/* Pop animation for items */
+.pop-animation,
+[animation="pop"] {
+  animation: pop 0.3s ease-in-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* On-hover animations */
+.wiggle-on-hover:hover {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.pulse-on-hover:hover {
+  animation: pulse 1s infinite;
+}
+
+.pop-on-hover:hover {
+  animation: pop 0.3s ease-in-out;
+}
+
+/* Fade in animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Fade out animation */
+.fade-out {
+  animation: fadeOut 0.5s ease-out;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Shake animation for error states */
+.shake-animation,
+[animation="shake"] {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Border pulse animation for inputs */
+.border-pulse,
+input.border-pulse,
+textarea.border-pulse {
+  animation: borderPulse 2s infinite;
+}
+
+@keyframes borderPulse {
+  0% { border-color: rgba(59, 130, 246, 0.5); }
+  50% { border-color: rgba(59, 130, 246, 1); }
+  100% { border-color: rgba(59, 130, 246, 0.5); }
+}
+
+/* Subtle zoom animation */
+.zoom-animation {
+  transition: transform 0.3s ease;
+}
+
+.zoom-animation:hover {
+  transform: scale(1.05);
+}
+
+/* Rotate animation */
+.rotate-animation {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Slow Pulse animation for icons */
+.animate-pulse-slow,
+[animation="pulse-slow"] {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

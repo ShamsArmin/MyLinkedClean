@@ -1,0 +1,41 @@
+Objective:
+Develop a mobile and web application that allows users to create a personalized profile containing all their social media and important links. Users will receive a unique shareable link (e.g., mylinked.app/username) to showcase all their platforms in one place—making it easy for others to explore their digital presence.
+
+⸻
+
+Core Features:
+	1.	User Account & Personalized Profile Creation
+	•	Sign up via email, phone, or social login
+	•	Generate a unique, shareable personal link
+	2.	Add Any Platform or Contact Link with Logo Display:
+Instagram, TikTok, Facebook, LinkedIn, Telegram, WhatsApp, Email, YouTube, Calendars, Online Stores, etc.
+	3.	Full Profile Customization:
+	•	Custom fonts, background, button styles, colors, and layout options
+	4.	Easy Sharing Options:
+	•	Copyable link, downloadable QR code, and Instagram/TikTok bio compatibility
+	5.	Built-in Analytics:
+	•	Number of profile views, clicks per link, top-performing platforms
+
+⸻
+
+Unique Features
+	1.	Smart Link AI:
+The app learns visitor behavior and prioritizes the display order of links based on click patterns and user engagement (AI-based link prioritization).
+	2.	Live Profile Feed Integration:
+Show live previews of latest posts from Instagram, TikTok, or YouTube directly inside the profile without needing redirection.
+	3.	Personalized Welcome Message (Audio/Video):
+Users can add a short voice or video message to greet visitors and introduce themselves.
+	4.	Multi-View Mode Toggle:
+Visitors can switch between different viewing layouts:
+	•	Classic List View
+	•	Grid View with Thumbnails
+	•	Story Mode
+	•	Portfolio/Resume View (professional presentation)
+	5.	Social Score Indicator:
+A dynamic visual score shows how optimized, active, and trustworthy a user’s profile is (gamification element to drive engagement).
+	6.	Collaborative Profiles (Collab Mode):
+Multiple users can share a joint profile for projects, events, or team introductions.
+	7.	Built-in Following System:
+Users can follow each other and get notified about new updates, links, or collaborations.
+	8.	One-Click Pitch Mode:
+A dedicated layout for creatives, freelancers, or professionals to pitch their work or services in one click – includes media, key links, and a contact button.

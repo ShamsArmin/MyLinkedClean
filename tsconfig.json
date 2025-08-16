@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    // ✅ PATH ALIAS CONFIG
+    "baseUrl": "client/src",
+    "paths": {
+      "@/*": ["*"],
+      "@shared/*": ["../../shared/*"]
+    }
+  },
+  "include": ["client/src", "shared", "server"],
+  "exclude": ["node_modules"]
+}

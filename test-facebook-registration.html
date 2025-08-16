@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Facebook Registration Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .test-button { background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        .test-button:hover { background: #0056b3; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .logs { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Facebook Registration Flow Test</h1>
+    
+    <div id="status" class="status info">
+        Ready to test Facebook registration flow
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Verify Facebook OAuth Configuration</h3>
+        <button class="test-button" onclick="checkFacebookConfig()">Check Facebook Config</button>
+        <div id="config-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Test Facebook Authorization URL</h3>
+        <button class="test-button" onclick="testAuthUrl()">Test Auth URL</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Simulate Facebook Login</h3>
+        <button class="test-button" onclick="window.open('/api/auth/facebook', '_blank')">Start Facebook Login</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Check Session Status</h3>
+        <button class="test-button" onclick="checkSession()">Check Session</button>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="step">
+        <h3>Test Logs</h3>
+        <div id="logs" class="logs">Test logs will appear here...</div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.textContent += `[${timestamp}] ${message}\n`;
+        }
+
+        async function checkFacebookConfig() {
+            log('Checking Facebook OAuth configuration...');
+            try {
+                const response = await fetch('/api/facebook/debug');
+                const data = await response.json();
+                
+                const result = document.getElementById('config-result');
+                if (data.clientId === '1420319199160179') {
+                    result.innerHTML = `<div class="status success">✅ Using NEW Facebook App: ${data.clientId}<br>App Name: ${data.appDetails?.name || 'N/A'}</div>`;
+                    log('✅ Facebook config verified - using new app');
+                } else {
+                    result.innerHTML = `<div class="status error">❌ Still using old app: ${data.clientId}</div>`;
+                    log('❌ Facebook config issue - using old app');
+                }
+            } catch (error) {
+                log(`❌ Config check failed: ${error.message}`);
+                document.getElementById('config-result').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAuthUrl() {
+            log('Testing Facebook authorization URL...');
+            try {
+                const response = await fetch('/api/auth/facebook', { redirect: 'manual' });
+                const result = document.getElementById('auth-result');
+                
+                if (response.status === 302) {
+                    const location = response.headers.get('location');
+                    if (location && location.includes('facebook.com')) {
+                        result.innerHTML = `<div class="status success">✅ Auth URL working<br>Redirects to: ${location.substring(0, 100)}...</div>`;
+                        log('✅ Facebook auth URL generated successfully');
+                    } else {
+                        result.innerHTML = `<div class="status error">❌ Invalid redirect URL</div>`;
+                        log('❌ Invalid Facebook redirect URL');
+                    }
+                } else {
+                    result.innerHTML = `<div class="status error">❌ Expected 302 redirect, got ${response.status}</div>`;
+                    log(`❌ Unexpected response status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Auth URL test failed: ${error.message}`);
+                document.getElementById('auth-result').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function checkSession() {
+            log('Checking user session...');
+            try {
+                const response = await fetch('/api/user');
+                const result = document.getElementById('session-result');
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    result.innerHTML = `<div class="status success">✅ User logged in: ${user.username || user.name}</div>`;
+                    log(`✅ User session active: ${user.username || user.name}`);
+                } else if (response.status === 401) {
+                    result.innerHTML = `<div class="status info">ℹ️ No active session</div>`;
+                    log('ℹ️ No active user session');
+                } else {
+                    result.innerHTML = `<div class="status error">❌ Session check failed: ${response.status}</div>`;
+                    log(`❌ Session check failed with status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Session check error: ${error.message}`);
+                document.getElementById('session-result').innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-check configuration on page load
+        window.onload = function() {
+            log('Facebook Registration Flow Test initialized');
+            checkFacebookConfig();
+        };
+
+        // Monitor for successful registration
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user && user.facebookId) {
+                        updateStatus('✅ Facebook registration successful!', 'success');
+                        log(`🎉 Facebook registration completed for user: ${user.username || user.name}`);
+                    }
+                }
+            } catch (error) {
+                // Silent monitoring - don't log errors
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

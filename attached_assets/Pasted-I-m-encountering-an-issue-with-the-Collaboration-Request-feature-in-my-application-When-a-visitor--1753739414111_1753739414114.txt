@@ -1,0 +1,41 @@
+I'm encountering an issue with the Collaboration Request feature in my application.
+
+When a visitor submits a collaboration request using the form, I successfully receive a notification in my dashboard. However, there are two critical problems after that:
+
+Broken View Link in Notification:
+When I click the View icon in the notification, a new page opens but shows the error:
+👉 "Page not found"
+This likely means the link or route handler for the collaboration request view page is broken, incorrectly configured, or missing entirely. Please verify:
+
+That the route being linked from the notification is correct (e.g., /collaborations/:id or a similar route).
+
+That the frontend has a corresponding page and React route to display a single collaboration request by ID.
+
+That the server’s route (GET /api/collaborations/:id) is working and returning valid data for the request.
+
+Request Not Visible on Collaboration Page (Requests Tab):
+After receiving the notification, I expect the request to appear on the Requests tab of the Collaboration page in my dashboard — but nothing shows up. Please check:
+
+That the GET /api/collaborations (or equivalent) API returns all collaboration requests submitted to the logged-in user.
+
+That the collaboration request is stored correctly in the database and associated with the intended recipient user.
+
+That the frontend renders requests correctly in the Requests tab, and properly filters for the user’s role (creator or receiver).
+
+That status labels like "pending", "approved", or "rejected" are used consistently and not causing a filtering mismatch.
+
+Also, make sure that:
+
+Collaboration requests use consistent status values (if applicable), and are not filtered out due to naming mismatches like “pending” vs “waiting” etc.
+
+The system supports displaying detailed information from the collaboration form — such as name, email, message, topic of collaboration, etc. — inside the dashboard interface.
+
+✅ Summary of what needs fixing:
+
+ Clicking "View" on a collaboration request notification should open a valid page with full details.
+
+ Collaboration requests should show up on the Collaboration Page > Requests tab in the user's dashboard.
+
+ API and routing should be verified and debugged both on the frontend and backend to ensure full consistency and visibility of collaboration requests.
+
+Please investigate and help resolve this issue — it’s critical for collaboration functionality and currently blocking user interaction.

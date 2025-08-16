@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook OAuth Direct Test</title>
+</head>
+<body>
+    <h1>Facebook OAuth Direct Test</h1>
+    <p>This page tests Facebook OAuth directly to identify any configuration issues.</p>
+    
+    <h2>Step 1: Test OAuth Authorization</h2>
+    <a href="https://www.facebook.com/v18.0/dialog/oauth?client_id=1047906810652246&redirect_uri=https://db7e7862-12d2-42a3-94ed-8dde37129e5e-00-1t9k44b80d2ae.spock.replit.dev/api/auth/facebook/callback&scope=public_profile&response_type=code&state=direct_test" 
+       target="_blank" 
+       style="display: inline-block; padding: 10px 20px; background: #1877f2; color: white; text-decoration: none; border-radius: 5px;">
+        Test Facebook OAuth
+    </a>
+    
+    <h2>Expected Results:</h2>
+    <ul>
+        <li><strong>If Working:</strong> Facebook login dialog appears, after login redirects to your callback</li>
+        <li><strong>If Broken:</strong> "This app isn't available" or "needs at least one supported permission" error</li>
+    </ul>
+    
+    <h2>Troubleshooting:</h2>
+    <p>If you still see the error after configuring Facebook Login:</p>
+    <ol>
+        <li>Wait 5-10 minutes for Facebook's systems to update</li>
+        <li>Try the test link in an incognito/private browser window</li>
+        <li>Clear Facebook cookies and try again</li>
+        <li>Ensure app is in "Live" mode, not "Development" mode</li>
+    </ol>
+    
+    <h2>Manual Verification:</h2>
+    <p>Check these URLs in Facebook Developer Console:</p>
+    <ul>
+        <li><a href="https://developers.facebook.com/apps/1047906810652246/fb-login/settings/" target="_blank">Facebook Login Settings</a></li>
+        <li><a href="https://developers.facebook.com/apps/1047906810652246/settings/basic/" target="_blank">Basic Settings</a></li>
+        <li><a href="https://developers.facebook.com/apps/1047906810652246/app-review/permissions/" target="_blank">App Review</a></li>
+    </ul>
+</body>
+</html>

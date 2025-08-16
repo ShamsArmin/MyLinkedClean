@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instagram OAuth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .btn { background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <h2>Instagram OAuth Connection Test</h2>
+    <p>Click the button below to test Instagram OAuth connection:</p>
+    
+    <button class="btn" onclick="connectInstagram()">Connect Instagram</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function connectInstagram() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Connecting to Instagram...';
+            
+            try {
+                const response = await fetch('/api/social/connect/instagram', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>Instagram OAuth URL Generated!</h3>
+                        <p><strong>Platform:</strong> Instagram</p>
+                        <p><strong>Auth URL:</strong></p>
+                        <textarea readonly style="width: 100%; height: 60px; font-size: 12px;">${data.authUrl}</textarea>
+                        <br><br>
+                        <button onclick="window.open('${data.authUrl}', '_blank', 'width=600,height=700')" 
+                                style="background: #E1306C; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+                            Open Instagram Authorization
+                        </button>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>Connection Failed</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Error:</strong> ${error}</p>
+                        <p>Make sure you're logged into the dashboard first.</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<h3>Network Error</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Live Mode OAuth Debug</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .debug-card { 
+            background: white; 
+            padding: 20px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button { 
+            background: #1877f2; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            cursor: pointer;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        .error { background: #ffe6e6; color: #cc0000; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #e6ffe6; color: #006600; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .info { background: #e6f3ff; color: #0066cc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="debug-card">
+        <h1>Facebook Live Mode OAuth Diagnostic</h1>
+        <div class="info">
+            <strong>Issue:</strong> "Feature Unavailable" error on mobile despite Live Mode<br>
+            <strong>App ID:</strong> 1420319199160179<br>
+            <strong>Status:</strong> Live Mode Activated
+        </div>
+    </div>
+
+    <div class="debug-card">
+        <h3>Diagnostic Tests</h3>
+        <button class="test-button" onclick="testAppToken()">
+            1. Test App Token Validity
+        </button>
+        <button class="test-button" onclick="testAppConfiguration()">
+            2. Check App Configuration
+        </button>
+        <button class="test-button" onclick="testOAuthURL()">
+            3. Generate OAuth URL
+        </button>
+        <button class="test-button" onclick="testMobileOptimization()">
+            4. Test Mobile Parameters
+        </button>
+    </div>
+
+    <div class="debug-card">
+        <h3>Live OAuth Test</h3>
+        <button class="test-button" onclick="testLiveOAuth()">
+            Test Facebook OAuth (Opens New Window)
+        </button>
+    </div>
+
+    <div class="debug-card">
+        <h3>Results</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const APP_ID = '1420319199160179';
+        const REDIRECT_URI = window.location.origin + '/api/auth/facebook/callback';
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAppToken() {
+            log('Testing app token validity...', 'info');
+            try {
+                const response = await fetch(`https://graph.facebook.com/${APP_ID}?access_token=${APP_ID}|APP_SECRET`);
+                const data = await response.json();
+                
+                if (data.name) {
+                    log(`✅ App token valid - App Name: ${data.name}`, 'success');
+                } else {
+                    log(`❌ App token issue: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAppConfiguration() {
+            log('Checking app configuration requirements...', 'info');
+            
+            const requirements = [
+                '✓ App Name: Required for Live Mode',
+                '✓ App Category: Required for Live Mode', 
+                '✓ Privacy Policy URL: Required for Live Mode',
+                '✓ Terms of Service URL: Recommended',
+                '✓ App Domains: Must match OAuth redirect',
+                '✓ Facebook Login Product: Must be added',
+                '✓ Valid OAuth Redirect URIs: Must be configured'
+            ];
+            
+            requirements.forEach(req => {
+                log(req, 'warning');
+            });
+            
+            log('All requirements must be completed in Facebook Developer Console', 'info');
+        }
+
+        function testOAuthURL() {
+            log('Generating OAuth URL...', 'info');
+            
+            const params = new URLSearchParams({
+                client_id: APP_ID,
+                redirect_uri: REDIRECT_URI,
+                scope: 'public_profile',
+                response_type: 'code',
+                state: 'test_' + Date.now(),
+                display: 'touch' // Mobile optimization
+            });
+            
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+            
+            log(`✅ OAuth URL generated successfully`, 'success');
+            log(`URL: ${authUrl}`, 'info');
+            log(`Length: ${authUrl.length} characters`, 'info');
+        }
+
+        function testMobileOptimization() {
+            log('Testing mobile-specific parameters...', 'info');
+            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            log(`Device: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
+            
+            const mobileParams = {
+                display: 'touch',
+                auth_type: 'rerequest',
+                return_scopes: 'true'
+            };
+            
+            Object.entries(mobileParams).forEach(([key, value]) => {
+                log(`${key}: ${value}`, 'info');
+            });
+        }
+
+        function testLiveOAuth() {
+            log('Initiating live OAuth test...', 'info');
+            
+            const params = new URLSearchParams({
+                client_id: APP_ID,
+                redirect_uri: REDIRECT_URI,
+                scope: 'public_profile',
+                response_type: 'code',
+                state: 'live_test_' + Date.now(),
+                display: 'touch',
+                auth_type: 'rerequest'
+            });
+            
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+            
+            log('Opening Facebook OAuth in new window...', 'info');
+            log('Watch for any error messages in the popup', 'warning');
+            
+            window.open(authUrl, '_blank', 'width=600,height=700');
+        }
+
+        // Auto-detect and log environment
+        window.onload = function() {
+            log('=== Facebook Live Mode Diagnostic Started ===', 'info');
+            log(`Current domain: ${window.location.hostname}`, 'info');
+            log(`Redirect URI: ${REDIRECT_URI}`, 'info');
+            log(`User Agent: ${navigator.userAgent.substring(0, 50)}...`, 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+Despite previous attempts, the core issue in my app still isn’t resolved. Let me clearly explain the behavior and what needs to be fixed.
+
+❗️PROBLEM DESCRIPTION:
+On the collaboration dashboard, I can see incoming requests under the "Pending Requests" tab.
+
+When I click Accept or Reject, the request disappears from the UI but doesn’t show up under "Accepted" or "Rejected" tabs.
+
+Nothing appears in any tab after status update. Only a full page refresh shows the updated state correctly.
+
+✅ WHAT I EXPECT TO HAPPEN:
+After clicking Accept or Reject:
+
+The request's status should be updated in the backend (which seems to work).
+
+The frontend should move the request from the “Pending” tab to either “Accepted” or “Rejected” without refreshing.
+
+📌 WHAT IS ALREADY IMPLEMENTED:
+Backend PATCH /api/collaboration-requests/:id endpoint is implemented and working correctly.
+
+updateCollaborationRequestStatus and getCollaborationRequestById exist and work.
+
+The frontend calls the updateStatus function via fetch when user clicks Accept or Reject.
+
+Data is stored using Prisma in a collaborationRequest model with a status field.
+
+🧠 POSSIBLE CAUSES (You Should Investigate):
+The frontend isn’t re-rendering properly after state update.
+
+The setRequests(...) call inside the updateStatus method might not update the state correctly.
+
+Check how updatedRequest is structured and whether it's consistent with the original array objects.
+
+updateStatus response shape is incorrect.
+
+The API response might return { success: true, request: {...} }, but the code may expect only the object itself.
+
+Ensure the updatedRequest assignment is correctly updating the status field of that item in setRequests.
+
+No refetch is triggered.
+
+You might need to refetch all requests or at least force a state update so React re-renders the filtered sections correctly.
+
+Frontend filtering issue in renderSection().
+
+Check if the status field is not being updated correctly after calling .map(...).
+
+Add logging or console inspection to see what the state holds after the mutation.
+
+✅ STEPS TO FIX:
+✅ Ensure your backend returns the updated request object only, like this:
+
+json
+Copy
+Edit
+{
+  "id": 12,
+  "senderName": "John",
+  "status": "accepted",
+  "message": "Let's collaborate!"
+}
+— not wrapped in { success: true, request: {...} }, unless frontend unwraps it.
+
+✅ In frontend, update this logic in updateStatus():
+
+tsx
+Copy
+Edit
+const updated = await res.json();
+setRequests((prev) =>
+  prev.map((r) => (r.id === id ? updated : r))
+);
+If the response is { request: {...} }, you must change to:
+
+tsx
+Copy
+Edit
+const updated = (await res.json()).request;
+✅ Alternatively, fetch all updated collaboration requests again after status change:
+
+tsx
+Copy
+Edit
+await fetchRequests();
+and refactor fetchRequests into a shared function inside the component.
+
+✅ Confirm filtering logic in renderSection() works with updated status:
+
+tsx
+Copy
+Edit
+const filtered = requests.filter((r) => r.status === filter);
+✅ Add console.log(requests) after setRequests to verify state is correctly updated and that the status changes are visible to the filtered tabs.
+
+🔁 OPTIONAL: Use SWR or React Query instead of manual state updates if this becomes too messy.
+Please go step by step and test if the request appears in the correct tab after accepting or rejecting it — without needing a page reload.
+
+Let me know if you need me to provide any additional context.

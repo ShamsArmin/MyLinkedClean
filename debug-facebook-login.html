@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Login Debug</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .button { padding: 12px 24px; margin: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .facebook { background: #1877f2; color: white; }
+        .test { background: #42b883; color: white; }
+        .debug { background: #666; color: white; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Facebook OAuth Debug Tool</h1>
+        <p>This tool helps diagnose Facebook Login issues by testing different approaches.</p>
+        
+        <div class="actions">
+            <button class="button facebook" onclick="testServerFlow()">🔗 Test Server OAuth Flow</button>
+            <button class="button test" onclick="testDirectUrl()">🌐 Test Direct Facebook URL</button>
+            <button class="button debug" onclick="checkAppConfig()">⚙️ Check App Configuration</button>
+            <button class="button debug" onclick="testUserAgent()">📱 Test User Agent Detection</button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div class="info">
+            <h3>📋 Current Configuration</h3>
+            <p><strong>Domain:</strong> <span id="domain"></span></p>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Platform:</strong> <span id="platform"></span></p>
+            <p><strong>Mobile:</strong> <span id="isMobile"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Display current configuration
+        document.getElementById('domain').textContent = window.location.host;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('platform').textContent = navigator.platform;
+        document.getElementById('isMobile').textContent = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
+
+        function addResult(type, title, content) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${title}</strong><br>${content}`;
+            results.appendChild(div);
+        }
+
+        async function testServerFlow() {
+            addResult('info', '🔄 Testing Server OAuth Flow', 'Checking if server redirects properly...');
+            
+            try {
+                const response = await fetch('/api/auth/facebook', {
+                    method: 'HEAD',
+                    credentials: 'include'
+                });
+                
+                if (response.status === 302) {
+                    const location = response.headers.get('location');
+                    addResult('success', '✅ Server OAuth Working', `Redirect URL: ${location}`);
+                    
+                    // Test if we can reach Facebook
+                    testFacebookUrl(location);
+                } else {
+                    addResult('error', '❌ Server OAuth Failed', `Status: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('error', '❌ Server OAuth Error', error.message);
+            }
+        }
+
+        async function testFacebookUrl(url) {
+            addResult('info', '🌐 Testing Facebook URL', 'Checking if Facebook OAuth URL is accessible...');
+            
+            try {
+                // We can't directly fetch Facebook due to CORS, but we can try to open it
+                const testWindow = window.open(url, 'facebook_test', 'width=600,height=600');
+                
+                setTimeout(() => {
+                    try {
+                        if (testWindow && !testWindow.closed) {
+                            addResult('success', '✅ Facebook URL Accessible', 'Facebook OAuth page opened successfully');
+                            testWindow.close();
+                        } else {
+                            addResult('error', '❌ Facebook URL Issues', 'Facebook page may have blocked or redirected');
+                        }
+                    } catch (e) {
+                        addResult('error', '❌ Facebook URL Error', e.message);
+                    }
+                }, 3000);
+                
+            } catch (error) {
+                addResult('error', '❌ Facebook URL Error', error.message);
+            }
+        }
+
+        async function testDirectUrl() {
+            const baseUrl = window.location.origin;
+            const facebookUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=1420319199160179&redirect_uri=${encodeURIComponent(baseUrl + '/api/auth/facebook/callback')}&scope=public_profile&response_type=code`;
+            
+            addResult('info', '🔗 Direct Facebook URL', `<pre>${facebookUrl}</pre>`);
+            
+            // Try to open the URL
+            window.open(facebookUrl, '_blank');
+        }
+
+        async function checkAppConfig() {
+            addResult('info', '⚙️ Checking App Configuration', 'Verifying Facebook app details...');
+            
+            try {
+                const response = await fetch('/api/debug/facebook-app');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult('success', '✅ App Configuration', `<pre>${JSON.stringify(data, null, 2)}</pre>`);
+                } else {
+                    addResult('error', '❌ App Configuration Error', data.message || 'Unknown error');
+                }
+            } catch (error) {
+                addResult('error', '❌ App Configuration Error', error.message);
+            }
+        }
+
+        async function testUserAgent() {
+            const isMobile = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
+            const platform = isMobile ? 'mobile' : 'desktop';
+            
+            addResult('info', '📱 User Agent Analysis', `
+                Platform: ${platform}<br>
+                User Agent: ${navigator.userAgent}<br>
+                Mobile Detection: ${isMobile}
+            `);
+            
+            // Test both mobile and desktop OAuth URLs
+            const baseUrl = window.location.origin;
+            const mobileUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=1420319199160179&redirect_uri=${encodeURIComponent(baseUrl + '/api/auth/facebook/callback')}&scope=public_profile&response_type=code&display=touch`;
+            const desktopUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=1420319199160179&redirect_uri=${encodeURIComponent(baseUrl + '/api/auth/facebook/callback')}&scope=public_profile&response_type=code&display=popup`;
+            
+            addResult('info', '🔗 Mobile OAuth URL', `<pre>${mobileUrl}</pre>`);
+            addResult('info', '🔗 Desktop OAuth URL', `<pre>${desktopUrl}</pre>`);
+        }
+
+        // Auto-run initial tests
+        window.onload = function() {
+            setTimeout(() => {
+                testServerFlow();
+                checkAppConfig();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

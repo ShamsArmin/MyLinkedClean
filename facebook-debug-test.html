@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook OAuth Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-box { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 10px; background: #1877f2; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #166fe5; }
+    </style>
+</head>
+<body>
+    <h1>Facebook OAuth Debug Test</h1>
+    <div class="debug-box info">
+        <h3>App Information</h3>
+        <p><strong>App ID:</strong> 2696553390542098</p>
+        <p><strong>App Name:</strong> MyLinked</p>
+        <p><strong>Category:</strong> Business</p>
+        <p><strong>Website:</strong> https://www.mylinked.app</p>
+        <p><strong>Redirect URI:</strong> https://www.mylinked.app/api/auth/facebook/callback</p>
+    </div>
+
+    <div class="debug-box">
+        <h3>Debug Tests</h3>
+        <button onclick="testAppToken()">Test App Token</button>
+        <button onclick="testOAuthFlow()">Test OAuth Flow</button>
+        <button onclick="testLoginButton()">Test Login Button</button>
+        <button onclick="checkAppStatus()">Check App Status</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const CLIENT_ID = '2696553390542098';
+        const REDIRECT_URI = 'https://www.mylinked.app/api/auth/facebook/callback';
+        
+        function addResult(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `debug-box ${type}`;
+            div.innerHTML = content;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testAppToken() {
+            try {
+                const response = await fetch('/api/facebook/debug');
+                const data = await response.json();
+                addResult(`<h4>App Token Test</h4><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+            } catch (error) {
+                addResult(`<h4>App Token Test Failed</h4><p>Error: ${error.message}</p>`, 'error');
+            }
+        }
+
+        function testOAuthFlow() {
+            const scope = 'public_profile';
+            const state = Math.random().toString(36).substring(2, 15);
+            
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+                `client_id=${CLIENT_ID}&` +
+                `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+                `scope=${encodeURIComponent(scope)}&` +
+                `response_type=code&` +
+                `state=${state}`;
+            
+            addResult(`<h4>OAuth Flow Test</h4><p>Redirecting to Facebook...</p><p><small>URL: ${authUrl}</small></p>`, 'info');
+            
+            // Add a delay to show the message, then redirect
+            setTimeout(() => {
+                window.location.href = authUrl;
+            }, 2000);
+        }
+
+        function testLoginButton() {
+            const loginUrl = '/api/auth/facebook';
+            addResult(`<h4>Login Button Test</h4><p>Testing standard login flow...</p>`, 'info');
+            
+            setTimeout(() => {
+                window.location.href = loginUrl;
+            }, 2000);
+        }
+
+        async function checkAppStatus() {
+            try {
+                // Check if Facebook SDK can validate the app
+                const testUrl = `https://graph.facebook.com/v18.0/${CLIENT_ID}?access_token=${CLIENT_ID}|test`;
+                
+                addResult(`<h4>App Status Check</h4><p>Testing Facebook Graph API access...</p><p><small>App ID: ${CLIENT_ID}</small></p>`, 'info');
+                
+                // Note: This will likely fail due to CORS, but we can see the network request
+                fetch(testUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        addResult(`<h4>App Status Success</h4><pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                    })
+                    .catch(error => {
+                        addResult(`<h4>App Status Check</h4><p>CORS blocked (expected), but app exists. Error: ${error.message}</p>`, 'info');
+                    });
+                
+            } catch (error) {
+                addResult(`<h4>App Status Check Failed</h4><p>Error: ${error.message}</p>`, 'error');
+            }
+        }
+
+        // Auto-run basic checks on page load
+        window.onload = function() {
+            addResult(`<h4>Debug Session Started</h4><p>Time: ${new Date().toLocaleString()}</p><p>User Agent: ${navigator.userAgent}</p>`, 'info');
+        };
+    </script>
+</body>
+</html>

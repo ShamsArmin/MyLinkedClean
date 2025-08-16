@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook OAuth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        button {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button:hover {
+            background: #166fe5;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+        }
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        .info {
+            background: rgba(52, 152, 219, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Facebook OAuth Test</h1>
+        <p>Test the Facebook OAuth integration for MyLinked application.</p>
+        
+        <div id="status" class="status info">
+            Ready to test Facebook OAuth...
+        </div>
+        
+        <button onclick="testFacebookOAuth()">🚀 Test Facebook OAuth</button>
+        <button onclick="testFacebookLogin()">📱 Test Facebook Login</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function addResult(title, content) {
+            const resultsDiv = document.getElementById('results');
+            const resultItem = document.createElement('div');
+            resultItem.className = 'status';
+            resultItem.innerHTML = `<strong>${title}:</strong><br><pre>${JSON.stringify(content, null, 2)}</pre>`;
+            resultsDiv.appendChild(resultItem);
+        }
+
+        async function testFacebookOAuth() {
+            updateStatus('Testing Facebook OAuth configuration...', 'info');
+            
+            try {
+                // Test Facebook debug endpoint
+                const response = await fetch('/api/facebook/debug');
+                const data = await response.json();
+                
+                if (data.appToken === 'Valid') {
+                    updateStatus('✅ Facebook OAuth configuration is working!', 'success');
+                    addResult('Facebook App Details', data);
+                } else {
+                    updateStatus('❌ Facebook OAuth configuration failed', 'error');
+                    addResult('Error Details', data);
+                }
+            } catch (error) {
+                updateStatus('❌ Failed to test Facebook OAuth', 'error');
+                addResult('Error', error.message);
+            }
+        }
+
+        async function testFacebookLogin() {
+            updateStatus('Starting Facebook login test...', 'info');
+            
+            try {
+                // Redirect to Facebook OAuth
+                window.location.href = '/api/auth/facebook';
+            } catch (error) {
+                updateStatus('❌ Failed to start Facebook login', 'error');
+                addResult('Error', error.message);
+            }
+        }
+
+        // Check URL parameters for OAuth callback results
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const message = urlParams.get('message');
+            
+            if (error) {
+                updateStatus(`❌ Facebook OAuth Error: ${error}`, 'error');
+                if (message) {
+                    addResult('Error Message', decodeURIComponent(message));
+                }
+            } else if (urlParams.get('success')) {
+                updateStatus('✅ Facebook OAuth completed successfully!', 'success');
+            }
+        });
+    </script>
+</body>
+</html>

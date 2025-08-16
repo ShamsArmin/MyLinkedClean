@@ -1,0 +1,57 @@
+import { 
+  users, links, profileViews, follows, socialPosts,
+  type User, type InsertUser, type UpdateUser,
+  type Link, type InsertLink, type UpdateLink,
+  type SocialPost, type InsertSocialPost,
+  type Follow, type InsertFollow,
+  type ProfileStats
+} from "@shared/schema";
+import session from "express-session";
+import { DatabaseStorage } from "./db-storage";
+
+// Define the storage interface
+export interface IStorage {
+  // Users
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: UpdateUser): Promise<User | undefined>;
+  updateSocialScore(userId: number, score: number): Promise<User | undefined>;
+  
+  // Links
+  getLinks(userId: number): Promise<Link[]>;
+  getLinkById(id: number): Promise<Link | undefined>;
+  createLink(userId: number, link: InsertLink): Promise<Link>;
+  updateLink(id: number, updates: UpdateLink): Promise<Link | undefined>;
+  deleteLink(id: number): Promise<boolean>;
+  incrementLinkClicks(id: number): Promise<Link | undefined>;
+  incrementLinkViews(id: number): Promise<Link | undefined>;
+  updateLinkAiScore(id: number, score: number): Promise<Link | undefined>;
+  reorderLinks(userId: number, linkScores: {id: number, score: number}[]): Promise<Link[]>;
+  
+  // Social Feed
+  getSocialPosts(userId: number): Promise<SocialPost[]>;
+  addSocialPost(userId: number, post: InsertSocialPost): Promise<SocialPost>;
+  
+  // Follows System
+  followUser(followerId: number, followingId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followingId: number): Promise<boolean>;
+  getFollowers(userId: number): Promise<User[]>;
+  getFollowing(userId: number): Promise<User[]>;
+  getFollowCounts(userId: number): Promise<{followers: number, following: number}>;
+  
+  // Collaborative Profiles
+  getCollaborators(userId: number): Promise<User[]>;
+  addCollaborator(userId: number, collaboratorId: number): Promise<boolean>;
+  removeCollaborator(userId: number, collaboratorId: number): Promise<boolean>;
+  
+  // Profile Stats
+  recordProfileView(userId: number): Promise<void>;
+  getUserStats(userId: number): Promise<ProfileStats>;
+
+  // Session store
+  sessionStore: any; // Using 'any' to avoid type issues with express-session
+}
+
+// Export a database storage instance
+export const storage = new DatabaseStorage();

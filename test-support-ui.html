@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Support Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin: 16px 0; background: white; }
+        .button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 4px;
+        }
+        .button:hover { background: #0056b3; }
+        .select { padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; }
+        .status-message { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Support Management Test</h1>
+    
+    <div id="status-message"></div>
+    
+    <div class="card">
+        <h3>Test Support Actions</h3>
+        
+        <div style="margin: 10px 0;">
+            <label>Message ID: </label>
+            <input type="number" id="messageId" value="8" style="padding: 4px;">
+        </div>
+        
+        <div style="margin: 10px 0;">
+            <label>Status: </label>
+            <select id="statusSelect" class="select">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+            </select>
+            <button class="button" onclick="updateStatus()">Update Status</button>
+        </div>
+        
+        <div style="margin: 10px 0;">
+            <button class="button" onclick="toggleRead()">Toggle Read Status</button>
+            <button class="button" onclick="deleteMessage()">Delete Message</button>
+            <button class="button" onclick="loadMessages()">Load Messages</button>
+        </div>
+        
+        <div style="margin: 10px 0;">
+            <label>Admin Notes: </label><br>
+            <textarea id="adminNotes" style="width: 300px; height: 60px; margin-top: 5px;"></textarea><br>
+            <button class="button" onclick="updateNotes()">Update Notes</button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>Messages</h3>
+        <div id="messagesList"></div>
+    </div>
+
+    <script>
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.className = 'status-message ' + (isError ? 'error' : 'success');
+            statusDiv.textContent = message;
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = '';
+            }, 3000);
+        }
+        
+        async function updateStatus() {
+            const id = document.getElementById('messageId').value;
+            const status = document.getElementById('statusSelect').value;
+            
+            try {
+                const response = await fetch(`/api/support/messages/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showStatus(`Status updated to ${status} for message ${id}`);
+                    loadMessages();
+                } else {
+                    showStatus('Failed to update status', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+        
+        async function toggleRead() {
+            const id = document.getElementById('messageId').value;
+            
+            try {
+                // First get current status
+                const getResponse = await fetch(`/api/support/messages`);
+                const messages = await getResponse.json();
+                const message = messages.find(m => m.id == id);
+                
+                if (!message) {
+                    showStatus('Message not found', true);
+                    return;
+                }
+                
+                const response = await fetch(`/api/support/messages/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isRead: !message.isRead })
+                });
+                
+                if (response.ok) {
+                    showStatus(`Message ${id} marked as ${!message.isRead ? 'read' : 'unread'}`);
+                    loadMessages();
+                } else {
+                    showStatus('Failed to toggle read status', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+        
+        async function deleteMessage() {
+            const id = document.getElementById('messageId').value;
+            
+            if (!confirm(`Are you sure you want to delete message ${id}?`)) return;
+            
+            try {
+                const response = await fetch(`/api/support/messages/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showStatus(`Message ${id} deleted successfully`);
+                    loadMessages();
+                } else {
+                    showStatus('Failed to delete message', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+        
+        async function updateNotes() {
+            const id = document.getElementById('messageId').value;
+            const notes = document.getElementById('adminNotes').value;
+            
+            try {
+                const response = await fetch(`/api/support/messages/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminNotes: notes })
+                });
+                
+                if (response.ok) {
+                    showStatus(`Notes updated for message ${id}`);
+                    loadMessages();
+                } else {
+                    showStatus('Failed to update notes', true);
+                }
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+            }
+        }
+        
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/support/messages');
+                const messages = await response.json();
+                
+                const listDiv = document.getElementById('messagesList');
+                listDiv.innerHTML = messages.map(msg => `
+                    <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px; ${!msg.isRead ? 'background: #e3f2fd;' : ''}">
+                        <strong>ID ${msg.id}:</strong> ${msg.subject}<br>
+                        <small>From: ${msg.name} (${msg.email})</small><br>
+                        <span style="background: ${
+                            msg.status === 'resolved' ? '#c8e6c9' : 
+                            msg.status === 'in_progress' ? '#fff3e0' : '#ffcdd2'
+                        }; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+                            ${msg.status.toUpperCase()}
+                        </span>
+                        <span style="background: ${msg.isRead ? '#e8f5e8' : '#ffe8e8'}; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-left: 5px;">
+                            ${msg.isRead ? 'READ' : 'UNREAD'}
+                        </span><br>
+                        <small>Message: ${msg.message.substring(0, 100)}...</small><br>
+                        ${msg.adminNotes ? `<small><strong>Notes:</strong> ${msg.adminNotes}</small>` : ''}
+                    </div>
+                `).join('');
+                
+                showStatus(`Loaded ${messages.length} messages`);
+            } catch (error) {
+                showStatus('Error loading messages: ' + error.message, true);
+            }
+        }
+        
+        // Load messages on page load
+        loadMessages();
+    </script>
+</body>
+</html>

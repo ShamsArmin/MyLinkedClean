@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Registration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .facebook-btn { 
+            background: #1877f2; color: white; padding: 12px 30px; 
+            border: none; border-radius: 8px; cursor: pointer; 
+            font-size: 16px; display: flex; align-items: center; gap: 10px;
+            margin: 20px 0;
+        }
+        .facebook-btn:hover { background: #166fe5; }
+        .status { padding: 12px; margin: 10px 0; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .logs { background: #f8f9fa; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; }
+        svg { width: 20px; height: 20px; fill: currentColor; }
+    </style>
+</head>
+<body>
+    <h1>Facebook Registration Test</h1>
+    
+    <div id="status" class="status info">
+        Click below to test Facebook registration
+    </div>
+
+    <button class="facebook-btn" onclick="startFacebookRegistration()">
+        <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Register with Facebook
+    </button>
+
+    <div id="user-info"></div>
+    <div id="logs" class="logs">Ready to test Facebook registration...<br></div>
+
+    <script>
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += `[${timestamp}] ${message}<br>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function startFacebookRegistration() {
+            log('Starting Facebook registration flow...');
+            updateStatus('Redirecting to Facebook...', 'info');
+            
+            // Open Facebook OAuth in same window to test full flow
+            window.location.href = '/api/auth/facebook';
+        }
+
+        // Check if user was registered/logged in after redirect
+        async function checkRegistrationStatus() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user) {
+                        updateStatus(`Registration successful! Welcome ${user.name || user.username}`, 'success');
+                        log(`✅ User registered successfully: ${user.name || user.username}`);
+                        
+                        const userInfo = document.getElementById('user-info');
+                        userInfo.innerHTML = `
+                            <div class="status success">
+                                <h3>Registration Complete!</h3>
+                                <p><strong>Name:</strong> ${user.name || 'Not provided'}</p>
+                                <p><strong>Username:</strong> ${user.username || 'Generated'}</p>
+                                <p><strong>Email:</strong> ${user.email || 'Not provided'}</p>
+                                <p><strong>Facebook ID:</strong> ${user.facebookId || 'Not linked'}</p>
+                            </div>
+                        `;
+                        return true;
+                    }
+                }
+                return false;
+            } catch (error) {
+                log(`Error checking registration status: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Monitor for successful registration every 2 seconds
+        const registrationMonitor = setInterval(async () => {
+            const isRegistered = await checkRegistrationStatus();
+            if (isRegistered) {
+                clearInterval(registrationMonitor);
+            }
+        }, 2000);
+
+        // Initial check in case user is already logged in
+        window.onload = function() {
+            log('Facebook registration test page loaded');
+            checkRegistrationStatus();
+        };
+    </script>
+</body>
+</html>
