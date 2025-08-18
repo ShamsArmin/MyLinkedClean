@@ -10,45 +10,34 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+  data?: any
+) {
   const res = await fetch(url, {
     method,
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      "Cache-Control": "no-cache"
     },
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
-  if (res.status === 401) {
-    // If we get a 401, invalidate the user query to force re-authentication
-    queryClient.setQueryData(["/api/user"], null);
-    queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `Request failed: ${res.status} ${res.statusText} ${text}`
+    );
   }
 
-  await throwIfResNotOk(res);
-  return res;
+  // ✅ If DELETE or response has no content, don’t parse JSON
+  if (method === "DELETE" || res.status === 204) {
+    return null;
+  }
+
+  // Some APIs return empty bodies even on 200 – guard against that
+  const text = await res.text();
+  if (!text) return null;
+
+  return JSON.parse(text);
 }
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
