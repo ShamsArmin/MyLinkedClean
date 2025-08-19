@@ -1,3 +1,4 @@
+// client/src/lib/queryClient.ts
 import { QueryClient } from "@tanstack/react-query";
 
 export async function apiRequest(
@@ -25,7 +26,6 @@ export async function apiRequest(
     return null;
   }
 
-  // Some APIs return empty bodies even on 200 – guard against that
   const text = await res.text();
   if (!text) return null;
 
