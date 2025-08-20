@@ -22,12 +22,17 @@ const LinkItem: React.FC<LinkItemProps> = ({ link, onEdit }) => {
       await apiRequest("DELETE", `/api/links/${link.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/links"] });
-      toast({
-        title: "Link deleted",
-        description: "Your link has been deleted successfully.",
-      });
-    },
+  // Optimistically update cache instead of waiting for refetch
+  queryClient.setQueryData<Link[]>(["/api/links"], (oldLinks = []) =>
+    oldLinks.filter((l) => l.id !== link.id)
+  );
+
+  toast({
+    title: "Link deleted",
+    description: "Your link has been deleted successfully.",
+  });
+},
+
     onError: (error: Error) => {
       toast({
         title: "Delete failed",

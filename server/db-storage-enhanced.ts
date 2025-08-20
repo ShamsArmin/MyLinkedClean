@@ -187,29 +187,34 @@ export class EnhancedDatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    const normalized = username.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.username, username));
+      .where(sql`LOWER(${users.username}) = ${normalized}`);
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    const normalized = email.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email));
+      .where(sql`LOWER(${users.email}) = ${normalized}`);
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Hash the password before inserting
+    const username = insertUser.username.trim().toLowerCase();
+    const email = insertUser.email ? insertUser.email.trim().toLowerCase() : undefined;
     const password = await this.hashPassword(insertUser.password);
 
     const [user] = await db
       .insert(users)
       .values({
         ...insertUser,
+        username,
+        email,
         password
       })
       .returning();
@@ -221,6 +226,8 @@ export class EnhancedDatabaseStorage implements IStorage {
     if (updates.password) {
       updates.password = await this.hashPassword(updates.password);
     }
+    if (updates.username) updates.username = updates.username.trim().toLowerCase();
+    if (updates.email) updates.email = updates.email.trim().toLowerCase();
 
     console.log('Updating user with data:', { id, updates });
 
