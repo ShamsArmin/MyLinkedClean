@@ -53,6 +53,7 @@ import emailRouter from "./email-routes";
 import supportRouter from "./support-routes";
 import { setupTikTokOAuth } from "./tiktok-oauth";
 import { sendPasswordResetEmail } from "./email-service";
+import { registerAuthDiagnostics } from "./auth-diagnostics";
 
 // Error handling middleware
 const asyncHandler = (fn: Function) => (req: any, res: any, next: any) => {
@@ -99,6 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication
   setupAuth(app);
+  registerAuthDiagnostics(app);
 
   // Set up TikTok OAuth
   setupTikTokOAuth(app);

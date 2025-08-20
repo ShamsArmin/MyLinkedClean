@@ -1,4 +1,4 @@
-import { Express, Request, Response, NextFunction } from "express";
+import { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
@@ -24,6 +24,21 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
+const LOG = process.env.LOG_AUTH === '1' ? console.info : () => {};
+
+const simpleCors: RequestHandler = (req, res, next) => {
+  const origin = req.headers.origin as string | undefined;
+  const allowed = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean);
+  if (!allowed.length || (origin && allowed.includes(origin))) {
+    if (origin) res.header('Access-Control-Allow-Origin', origin);
+    else res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+};
 
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -40,6 +55,11 @@ export async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET must be set');
+  }
+  LOG('env', { SESSION_SECRET: !!process.env.SESSION_SECRET });
+
   // Configure session with fallback to memory store if database fails
   const MemoryStore = createMemoryStore(session);
   let sessionStore;
@@ -54,16 +74,19 @@ export function setupAuth(app: Express) {
     });
   }
 
+  app.use(simpleCors);
+
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "mylinked-secret-key",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to false for development
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     },
     name: 'mylinked.session'
   };
@@ -74,26 +97,29 @@ export function setupAuth(app: Express) {
 
   // Configure local strategy
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'username', passwordField: 'password' }, async (identifier, password, done) => {
       try {
-        console.log('Login attempt for username:', username);
-        const user = await storage.getUserByUsername(username);
+        const trimmed = identifier.trim();
+        const isEmail = trimmed.includes('@');
+        const normalized = trimmed.toLowerCase();
+        LOG('login-attempt', { identifier: normalized });
+        let user = isEmail
+          ? await storage.getUserByEmail(normalized)
+          : await storage.getUserByUsername(normalized);
         if (!user) {
-          console.log('User not found:', username);
+          LOG('user-not-found', normalized);
           return done(null, false, { message: "Invalid username or password" });
         }
 
-        console.log('User found, checking password...');
-        console.log('Stored password hash:', user.password);
         const isPasswordValid = await storage.comparePasswords(password, user.password);
-        console.log('Password valid:', isPasswordValid);
-        
+        LOG('password-check', { ok: isPasswordValid });
+
         if (!isPasswordValid) {
-          console.log('Password verification failed for user:', username);
+          LOG('password-invalid', normalized);
           return done(null, false, { message: "Invalid username or password" });
         }
 
-        console.log('Login successful for user:', username);
+        LOG('login-success', normalized);
         return done(null, user as any);
       } catch (error) {
         console.error('Login error:', error);
@@ -127,19 +153,21 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       const { username, password, name, email, bio } = req.body;
+      const normalizedUsername = username?.trim().toLowerCase();
+      const normalizedEmail = email?.trim().toLowerCase();
 
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
+      const existingUser =
+        (normalizedUsername && await storage.getUserByUsername(normalizedUsername)) ||
+        (normalizedEmail && await storage.getUserByEmail(normalizedEmail));
       if (existingUser) {
-        return res.status(400).json({ message: "Username already taken" });
+        return res.status(409).json({ message: "Username or email already exists" });
       }
 
-      // Create user (storage will handle password hashing)
       const user = await storage.createUser({
-        username,
+        username: normalizedUsername,
         password,
         name,
-        email,
+        email: normalizedEmail,
         bio,
       });
 
@@ -149,6 +177,9 @@ export function setupAuth(app: Express) {
         return res.status(201).json({ message: "User registered successfully", user });
       });
     } catch (error) {
+      if ((error as any)?.code === '23505') {
+        return res.status(409).json({ message: "Username or email already exists" });
+      }
       next(error);
     }
   });

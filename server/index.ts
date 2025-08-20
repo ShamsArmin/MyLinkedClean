@@ -10,6 +10,7 @@ import { securityMiddleware } from "./security-middleware";
 
 const app = express();
 
+
 // Add security middleware (must be first)
 app.use(securityMiddleware.securityHeaders);
 app.use(securityMiddleware.rateLimiter);
