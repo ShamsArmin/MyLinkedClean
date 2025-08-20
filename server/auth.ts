@@ -108,9 +108,15 @@ export function setupAuth(app: Express) {
   });
 
   // Deserialize user from session
-  passport.deserializeUser(async (id: number, done) => {
+  passport.deserializeUser(async (id: number | string, done) => {
     try {
-      const user = await storage.getUser(id);
+      // Session stores may return the ID as a string
+      const userId = typeof id === "string" ? parseInt(id, 10) : id;
+      if (Number.isNaN(userId)) {
+        return done(new Error("Invalid user ID"));
+      }
+
+      const user = await storage.getUser(userId);
       done(null, user as any);
     } catch (error) {
       done(error);
