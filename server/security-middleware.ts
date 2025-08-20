@@ -272,11 +272,17 @@ class SecurityMiddleware {
 
   // Private helper methods
   private getClientIP(req: Request): string {
-    return req.ip || 
-           req.connection.remoteAddress || 
-           req.socket.remoteAddress || 
-           (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
-           'unknown';
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string' && forwarded.length > 0) {
+      return forwarded.split(',')[0];
+    }
+
+    return (
+      req.ip ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      'unknown'
+    );
   }
 
   private handleRateLimit(ip: string, type: 'minute' | 'hour', req: Request) {

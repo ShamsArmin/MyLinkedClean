@@ -187,22 +187,28 @@ export class EnhancedDatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    const normalized = username.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.username, username));
+      .where(eq(users.username, normalized));
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    const normalized = email.trim().toLowerCase();
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email));
+      .where(eq(users.email, normalized));
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Normalize input
+    const username = insertUser.username.trim().toLowerCase();
+    const email = insertUser.email ? insertUser.email.trim().toLowerCase() : undefined;
+
     // Hash the password before inserting
     const password = await this.hashPassword(insertUser.password);
 
@@ -210,6 +216,8 @@ export class EnhancedDatabaseStorage implements IStorage {
       .insert(users)
       .values({
         ...insertUser,
+        username,
+        email,
         password
       })
       .returning();
