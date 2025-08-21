@@ -46,7 +46,6 @@ import { adminRouter } from "./admin-routes";
 import { professionalAdminRouter } from "./professional-admin-routes";
 import { monitoringRouter } from "./monitoring-routes";
 import { securityRouter } from "./security-routes";
-import bcrypt from "bcrypt";
 import { pool } from "./db";
 import { handleCustomDomain, domainHealthCheck } from "./domain-middleware";
 import emailRouter from "./email-routes";

@@ -42,6 +42,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { IStorage } from "./storage";
+import bcrypt from "bcrypt";
 
 const scryptAsync = promisify(scrypt);
 
@@ -61,7 +62,20 @@ export class EnhancedDatabaseStorage implements IStorage {
   }
 
   async comparePasswords(supplied: string, stored: string): Promise<boolean> {
+    if (!stored) return false;
+
+    // Support legacy bcrypt hashes that start with "$2"
+    if (stored.startsWith("$2")) {
+      try {
+        return await bcrypt.compare(supplied, stored);
+      } catch (err) {
+        console.error("Bcrypt comparison failed:", err);
+        return false;
+      }
+    }
+
     const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) return false;
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);

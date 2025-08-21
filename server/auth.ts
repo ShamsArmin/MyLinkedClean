@@ -4,6 +4,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { User as UserType } from "../shared/schema";
 import createMemoryStore from "memorystore";
@@ -32,6 +33,18 @@ export async function hashPassword(password: string) {
 }
 
 export async function comparePasswords(supplied: string, stored: string) {
+  if (!stored) return false;
+
+  // Handle legacy bcrypt hashes
+  if (stored.startsWith("$2")) {
+    try {
+      return await bcrypt.compare(supplied, stored);
+    } catch (err) {
+      console.error("Bcrypt comparison failed:", err);
+      return false;
+    }
+  }
+
   const [hashed, salt] = stored.split(".");
   if (!hashed || !salt) return false;
   const hashedBuf = Buffer.from(hashed, "hex");
